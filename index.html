@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Calendar Countdown</title>
+		<style>
+			:root {
+				--black: rgb(11, 14, 20);
+				--white: white;
+			}
+			body {
+				background-color: var(--black);
+				display: flex;
+				flex-direction: row;
+				justify-content: center;
+				color: var(--white);
+				text-align: center;
+			}
+			.column {
+				display: flex;
+				flex-direction: column;
+				width: 600px;
+			}
+			#tableView {
+				overflow-y: auto;
+				max-height: 90%;
+			}
+			table {
+				border-collapse: collapse;
+				margin: 0 auto;
+			}
+			table td.crossed {
+				background-image: linear-gradient(to bottom right, transparent calc(50% - 1px), red, transparent calc(50% + 1px));
+			}
+
+			td {
+				border: 1px solid var(--white);
+				text-align: left;
+				position: relative;
+			}
+			td:hover {
+				background-color: rgb(78, 78, 78);
+			}
+			td span {
+				text-decoration: underline;
+				font-size: 10pt;
+			}
+			td p {
+				text-align: center;
+				padding: 0 5px;
+				margin: 4px;
+				font-size: smaller;
+				color: rgb(83, 162, 253);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="column">
+			<label>Start Date: <input type="date" name="startDate" id="startDate" /></label>
+			<label>End Date: <input type="date" name="endDate" id="endDate" /></label>
+			<h3><span id="daysUntilDone">__</span> Days Until The Big Thing!</h3>
+			<table>
+				<tbody></tbody>
+			</table>
+		</div>
+		<script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+		<script type="text/javascript">
+			$(document).ready(() => {
+				$("#endDate, #startDate").on("change", getInputDate);
+				let trainingStartDate = localStorage.getItem("trainingStartDate");
+				let trainingEndDate = localStorage.getItem("trainingEndDate");
+				if (trainingStartDate !== null && trainingStartDate !== undefined) {
+					let date = new Date(trainingStartDate);
+					let yyyy = date.getFullYear(),
+						mm = date.getMonth() + 1,
+						dd = date.getDate();
+					date = `${yyyy}-${mm < 10 ? "0" + mm : mm}-${dd < 10 ? "0" + dd : dd}`;
+					$("#startDate").val(date);
+				}
+				if (trainingEndDate !== null && trainingEndDate !== undefined) {
+					let date = new Date(trainingEndDate);
+					let yyyy = date.getFullYear(),
+						mm = date.getMonth() + 1,
+						dd = date.getDate();
+					date = `${yyyy}-${mm < 10 ? "0" + mm : mm}-${dd < 10 ? "0" + dd : dd}`;
+					$("#endDate").val(date).change();
+				}
+			});
+
+			const today = new Date();
+
+			function getInputDate() {
+				let endDate = $("#endDate").val(),
+					startDate = $("#startDate").val();
+				if (endDate !== "Invalid Date" && startDate !== "Invalid Date") {
+					let endDateISO = new Date(endDate),
+						startDateISO = new Date(startDate),
+						daysToEnd = datediff(startDateISO, endDateISO),
+						daysToStart = datediff(startDateISO, today);
+					$("#daysUntilDone").text(daysToEnd - daysToStart);
+					localStorage.setItem("trainingStartDate", startDateISO);
+					localStorage.setItem("trainingEndDate", endDateISO);
+					buildCalendar(daysToEnd, daysToStart);
+				}
+			}
+
+			function datediff(first, second) {
+				return Math.round((second - first) / (1000 * 60 * 60 * 24));
+			}
+
+			function percentage(partialValue, totalValue) {
+				return (100 * partialValue) / totalValue;
+			}
+
+			function buildCalendar(daysToEnd, daysToStart) {
+				let tb = $("tbody"),
+					t = 0,
+					j = daysToEnd;
+				tb.html("");
+				for (let i = 1; i < daysToEnd; i++) {
+					if (t === 0) {
+						tb.append("<tr>");
+						console.log("row start");
+					}
+					tb.append(`<td class="${daysToStart >= j ? "crossed" : ""}"><span>${i}</span><p>${percentage(j, daysToEnd).toFixed(1)}%</p></td>`);
+					console.log("cell");
+					t++;
+					if (t === 7) {
+						tb.append("</tr>");
+						console.log("row end");
+						t = 0;
+					}
+					j--;
+				}
+			}
+		</script>
+	</body>
+</html>
